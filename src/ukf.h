@@ -22,15 +22,6 @@ public:
   ///* if this is false, radar measurements will be ignored (except for init)
   bool use_radar_;
 
-  ///* state vector: [pos1 pos2 vel_abs yaw_angle yaw_rate] in SI units and rad
-  VectorXd x_;
-
-  ///* state covariance matrix
-  MatrixXd P_;
-
-  ///* predicted sigma points matrix
-  MatrixXd Xsig_pred_;
-
   ///* time when the state is true, in us
   long long time_us_;
 
@@ -55,17 +46,26 @@ public:
   ///* Radar measurement noise standard deviation radius change in m/s
   double std_radrd_ ;
 
-  ///* Weights of sigma points
-  VectorXd weights_;
-
   ///* State dimension
   int n_x_;
+
+  ///* state vector: [pos1 pos2 vel_abs yaw_angle yaw_rate] in SI units and rad
+  VectorXd x_;
+
+  ///* state covariance matrix
+  MatrixXd P_;
 
   ///* Augmented state dimension
   int n_aug_;
 
   ///* Sigma point spreading parameter
   double lambda_;
+
+  ///* Weights of sigma points
+  VectorXd weights_;
+
+  ///* predicted sigma points matrix
+  MatrixXd Xsig_pred_;
 
 
   /**
@@ -102,6 +102,20 @@ public:
    * @param meas_package The measurement at k+1
    */
   void UpdateRadar(MeasurementPackage meas_package);
+
+private:
+  ///* Generate augmented Sigma Points
+  void AugmentedSigmaPoints(MatrixXd* Xsig_aug_out);
+  ///* Calculate predicted Sigma Points
+  void SigmaPointPrediction(MatrixXd* Xsig_pre_out, double delta_t, const MatrixXd& Xsig_aug_in);
+  ///* Calculate predicted Mean and Covariance
+  void PredictMeanAndCovariance(const MatrixXd& Xsig_pred_in);
+  ///* Calculte predicted Mean and Covariance in measurement space for Lidar
+  void PredictLidarMeasurement(MatrixXd *Zsig_out, VectorXd* z_pred_out, MatrixXd* S_out);
+  ///* Calculte predicted Mean and Covariance in measurement space for radar
+  void PredictRadarMeasurement(MatrixXd *Zsig_out, VectorXd* z_pred_out, MatrixXd* S_out);
+  ///* Update states
+  void UpdateState(const VectorXd& z, int n_z, const MatrixXd& Zsig_in, const VectorXd& z_pred_in, const MatrixXd& S_in);
 };
 
 #endif /* UKF_H */
